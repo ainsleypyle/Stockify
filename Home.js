@@ -9,6 +9,8 @@ export default function Home() {
   const [high, setHigh] = useState("");
   const [low, setLow] = useState("");
   const [volume, setVolume] = useState("");
+  const [savedStocks, setSavedStocks] = useState([]);
+
 
   function getFromApi() {
     console.log(`https://financialdata.net/api/v1/stock-prices?identifier=${inputTicker}&key=59f9a36a77655275b354e33bde88c00f`);
@@ -25,6 +27,20 @@ export default function Home() {
         console.error(error);
       });
   }
+
+  function handleSave() { 
+    const newStock = {
+      ticker: inputTicker,
+      closePrice: closePrice,
+      volume: volume,
+    };
+    setSavedStocks([...savedStocks, newStock]);
+  }
+
+  function handleClear() { 
+    setSavedStocks([]);
+  }
+
 
   return (
     <View style={styles.container}>
@@ -46,8 +62,19 @@ export default function Home() {
       <Text style={styles.priceTitle}>Low: <Text style={styles.priceValue}>{low}</Text></Text>
       <Text style={styles.priceTitle}>Volume: <Text style={styles.priceValue}>{volume}</Text></Text>
 
+      <View style={styles.buttonContainer}>
+        <Button title="Save" onPress={handleSave} />
+        <Button title="Clear Table" onPress={handleClear} />
+      </View>
+
       <Text style={styles.subtitle}>My Saved Stocks</Text>
-      <Text>Put Table Here</Text>
+      
+      {savedStocks.map((stock, index) => (
+        <View key={index}>
+          <Text>{stock.ticker}: Close {stock.closePrice}, Volume {stock.volume}</Text>
+        </View>
+      ))}
+
     </View>
   );
 }
