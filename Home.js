@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { StyleSheet, Text, View, Button, TextInput } from 'react-native';
+import { StyleSheet, Text, View, Button, TextInput, TouchableOpacity } from 'react-native';
 
 export default function Home() {
   // Defining state variables
@@ -53,8 +53,11 @@ export default function Home() {
           placeholder="Input Here"
           onChangeText={(text) => setInputTicker(text.toUpperCase())}
         />
-        <Button title="Enter" onPress={getFromApi} />
+        <TouchableOpacity style={styles.button} onPress={getFromApi}>
+          <Text style={styles.buttonText}>Enter</Text>
+        </TouchableOpacity>
       </View>
+
 
       <Text style={styles.priceTitle}>Open Price: <Text style={styles.priceValue}>{openPrice}</Text></Text>
       <Text style={styles.priceTitle}>Close Price: <Text style={styles.priceValue}>{closePrice}</Text></Text>
@@ -63,8 +66,12 @@ export default function Home() {
       <Text style={styles.priceTitle}>Volume: <Text style={styles.priceValue}>{volume}</Text></Text>
 
       <View style={styles.buttonContainer}>
-        <Button title="Save" onPress={handleSave} />
-        <Button title="Clear Table" onPress={handleClear} />
+          <TouchableOpacity style={styles.button} onPress={handleSave}>
+            <Text style={styles.buttonText}>Save</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleClear}>
+            <Text style={styles.buttonText}>Clear Table</Text>
+          </TouchableOpacity>
       </View>
 
       <Text style={styles.subtitle}>My Saved Stocks</Text>
@@ -85,12 +92,13 @@ const styles = StyleSheet.create({
     paddingTop: 50,
     alignItems: 'center',
     justifyContent: 'flex-start',
-    backgroundColor: '#00BFFF',
+    backgroundColor: '#6495ED',
+    width: '100%',
   },
   title: {
     fontSize: 70,
     fontWeight: 'bold',
-    color: 'orange',
+    color: '#FF7F50',
     letterSpacing: 2,
     textShadowColor: 'rgba(0, 0, 0, 0.2)',
     textShadowOffset: { width: 1, height: 2 },
@@ -100,10 +108,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'flex-start',
+    justifyContent: 'center',  
     width: '100%',
     marginBottom: 20,
-  },
+  },  
   label: {
     fontSize: 40,
     fontWeight: '600',
@@ -114,32 +122,40 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
-    textAlign: 'left',
+    textAlign: 'center',
   },
   input: {
-    height: 40,
-    width: 120,
-    borderColor: 'gray',
-    borderWidth: 1,
-    marginRight: 8,
-    paddingHorizontal: 10,
-    borderRadius: 6,
-  },
+    height: 50,
+    width: 130,
+    backgroundColor: 'white',
+    borderColor: '#FFA500', 
+    borderWidth: 2,
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3, 
+  },  
   priceTitle: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#003366', // Dark blue color
+    color: '#003366', 
     textShadowColor: 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
     marginBottom: 8,
-    textAlign: 'left', // Aligns the text to the left
-    width: '100%', // Ensures the text spans the full width
+    textAlign: 'center', 
+    width: '100%', 
   },
   priceValue: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#fff', // White color for the price values
+    color: '#fff', 
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
@@ -149,4 +165,29 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
   },
+  button: {
+    backgroundColor: '#FFA500', 
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    marginHorizontal: 5,
+    marginVertical: 5,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    elevation: 2, 
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+  },  
 });
