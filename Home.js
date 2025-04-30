@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
-import { StyleSheet, Text, View, Button, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { db } from './firebaseConfig';
+import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
 
 export default function Home() {
-  // Defining state variables
   const [inputTicker, setInputTicker] = useState("");
   const [openPrice, setOpenPrice] = useState("");
   const [closePrice, setClosePrice] = useState("");
@@ -11,9 +12,16 @@ export default function Home() {
   const [volume, setVolume] = useState("");
   const [savedStocks, setSavedStocks] = useState([]);
 
+  useEffect(() => {
+    const q = query(collection(db, "stocks"), orderBy("timestamp", "desc"));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const stocks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSavedStocks(stocks);
+    });
+    return () => unsubscribe();
+  }, []);
 
-  function getFromApi() {
-    console.log(`https://financialdata.net/api/v1/stock-prices?identifier=${inputTicker}&key=59f9a36a77655275b354e33bde88c00f`);
+  const getFromApi = () => {
     fetch(`https://financialdata.net/api/v1/stock-prices?identifier=${inputTicker}&key=59f9a36a77655275b354e33bde88c00f`)
       .then((response) => response.json())
       .then((json) => {
@@ -26,21 +34,28 @@ export default function Home() {
       .catch((error) => {
         console.error(error);
       });
-  }
+  };
 
-  function handleSave() { 
-    const newStock = {
-      ticker: inputTicker,
-      closePrice: closePrice,
-      volume: volume,
-    };
-    setSavedStocks([...savedStocks, newStock]);
-  }
+  const handleSave = async () => {
+    try {
+      await addDoc(collection(db, "stocks"), {
+        ticker: inputTicker,
+        openPrice,
+        closePrice,
+        high,
+        low,
+        volume,
+        timestamp: new Date(),
+      });
+    } catch (e) {
+      console.error("Error saving to Firestore:", e);
+    }
+  };
 
-  function handleClear() { 
+  const handleClear = () => {
     setSavedStocks([]);
-  }
-
+    // Optional: you can add code here to also clear Firestore entries if needed
+  };
 
   return (
     <View style={styles.container}>
@@ -58,7 +73,6 @@ export default function Home() {
         </TouchableOpacity>
       </View>
 
-
       <Text style={styles.priceTitle}>Open Price: <Text style={styles.priceValue}>{openPrice}</Text></Text>
       <Text style={styles.priceTitle}>Close Price: <Text style={styles.priceValue}>{closePrice}</Text></Text>
       <Text style={styles.priceTitle}>High: <Text style={styles.priceValue}>{high}</Text></Text>
@@ -66,22 +80,28 @@ export default function Home() {
       <Text style={styles.priceTitle}>Volume: <Text style={styles.priceValue}>{volume}</Text></Text>
 
       <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={handleSave}>
-            <Text style={styles.buttonText}>Save</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.button} onPress={handleClear}>
-            <Text style={styles.buttonText}>Clear Table</Text>
-          </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleSave}>
+          <Text style={styles.buttonText}>Save</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={handleClear}>
+          <Text style={styles.buttonText}>Clear Table</Text>
+        </TouchableOpacity>
       </View>
 
-      <Text style={styles.subtitle}>My Saved Stocks</Text>
-      
-      {savedStocks.map((stock, index) => (
-        <View key={index}>
-          <Text>{stock.ticker}: Close {stock.closePrice}, Volume {stock.volume}</Text>
-        </View>
-      ))}
+      <Text style={styles.subtitle}>📊 My Saved Stocks</Text>
 
+      <View style={styles.stockList}>
+        {savedStocks.map((stock) => (
+          <View key={stock.id} style={styles.stockCard}>
+            <Text style={styles.stockTicker}>{stock.ticker}</Text>
+            <Text>Open: {stock.openPrice}</Text>
+            <Text>Close: {stock.closePrice}</Text>
+            <Text>High: {stock.high}</Text>
+            <Text>Low: {stock.low}</Text>
+            <Text>Volume: {stock.volume}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -108,10 +128,10 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',  
+    justifyContent: 'center',
     width: '100%',
     marginBottom: 20,
-  },  
+  },
   label: {
     fontSize: 40,
     fontWeight: '600',
@@ -128,7 +148,7 @@ const styles = StyleSheet.create({
     height: 50,
     width: 130,
     backgroundColor: 'white',
-    borderColor: '#FFA500', 
+    borderColor: '#FFA500',
     borderWidth: 2,
     borderRadius: 12,
     paddingHorizontal: 15,
@@ -139,23 +159,23 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3, 
-  },  
+    elevation: 3,
+  },
   priceTitle: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#003366', 
+    color: '#003366',
     textShadowColor: 'rgba(0, 0, 0, 0.1)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
     marginBottom: 8,
-    textAlign: 'center', 
-    width: '100%', 
+    textAlign: 'center',
+    width: '100%',
   },
   priceValue: {
     fontSize: 28,
     fontWeight: '600',
-    color: '#fff', 
+    color: '#fff',
     textShadowColor: 'rgba(0, 0, 0, 0.3)',
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
@@ -163,10 +183,11 @@ const styles = StyleSheet.create({
   subtitle: {
     marginTop: 20,
     fontWeight: 'bold',
-    fontSize: 18,
+    fontSize: 20,
+    color: '#fff',
   },
   button: {
-    backgroundColor: '#FFA500', 
+    backgroundColor: '#FFA500',
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 8,
@@ -177,7 +198,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 3,
-    elevation: 2, 
+    elevation: 2,
   },
   buttonText: {
     color: 'white',
@@ -189,5 +210,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
-  },  
+  },
+  stockList: {
+    marginTop: 15,
+    width: '90%',
+    padding: 10,
+    backgroundColor: '#ffffffcc',
+    borderRadius: 10,
+  },
+  stockCard: {
+    borderBottomWidth: 1,
+    borderColor: '#ccc',
+    paddingVertical: 8,
+    marginBottom: 8,
+  },
+  stockTicker: {
+    fontWeight: 'bold',
+    fontSize: 16,
+    color: '#333',
+  },
 });
