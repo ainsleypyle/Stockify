@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Text, View, TextInput, TouchableOpacity } from 'react-native';
+import { StyleSheet, Text, View, TextInput, TouchableOpacity, ScrollView } from 'react-native';
 import { db } from './firebaseConfig';
-import { collection, addDoc, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, orderBy, getDocs, deleteDoc, doc } from 'firebase/firestore';
 
 export default function Home() {
   const [inputTicker, setInputTicker] = useState("");
@@ -52,12 +52,22 @@ export default function Home() {
     }
   };
 
-  const handleClear = () => {
-    setSavedStocks([]);
-    // Optional: you can add code here to also clear Firestore entries if needed
+  const handleClear = async () => {
+    try {
+      const querySnapshot = await getDocs(collection(db, "stocks"));
+      const batchDeletions = querySnapshot.docs.map(async (docSnap) => {
+        await deleteDoc(doc(db, "stocks", docSnap.id));
+      });
+      await Promise.all(batchDeletions);
+      setSavedStocks([]); // Clear the local state too
+    } catch (error) {
+      console.error("Error clearing Firestore collection:", error);
+    }
   };
+  
 
   return (
+    <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContainer}>
     <View style={styles.container}>
       <Text style={styles.title}>Stockify</Text>
 
@@ -103,6 +113,8 @@ export default function Home() {
         ))}
       </View>
     </View>
+    </ScrollView>
+    
   );
 }
 
@@ -229,4 +241,24 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#333',
   },
+  scrollView: {
+    flex: 1,
+    backgroundColor: '#6495ED',
+    width: '100%', // same as your container background
+  },
+  
+  scrollContainer: {
+    flexGrow: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#6495ED',
+  },
+  
+  container: {
+    paddingTop: 50,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    backgroundColor: '#6495ED',
+    width: '100%',
+  },  
 });
